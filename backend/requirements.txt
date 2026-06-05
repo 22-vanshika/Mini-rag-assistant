@@ -1,10 +1,9 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic
 pydantic-settings
-python-dotenv
 sentence-transformers
-chromadb
+numpy
 httpx
 python-multipart
 pytest

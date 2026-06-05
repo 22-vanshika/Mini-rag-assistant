@@ -41,8 +41,10 @@ class QueryEmptyError(AppException):
 
 
 class NoContextFoundError(AppException):
+    # Signals the knowledge base has no relevant content for the query — the
+    # requested context does not exist, so 404 is the correct semantic.
     def __init__(self, message: str = "No relevant context found for the query") -> None:
-        super().__init__(message, status_code=200)
+        super().__init__(message, status_code=404)
 
 
 class LLMConnectionError(AppException):

@@ -1,11 +1,17 @@
 import logging
 import threading
+from typing import TypedDict
 
 import numpy as np
 
 from app.core.exceptions import VectorStoreError
 
 logger = logging.getLogger(__name__)
+
+
+class SearchResult(TypedDict):
+    chunk: str
+    score: float
 
 
 class VectorStore:
@@ -28,7 +34,7 @@ class VectorStore:
             self._chunks = list(chunks)
             self._embeddings = list(embeddings)
 
-    def search(self, query_embedding: list[float], top_k: int = 5) -> list[dict]:
+    def search(self, query_embedding: list[float], top_k: int = 5) -> list[SearchResult]:
         with self._lock:
             if not self._chunks:
                 return []

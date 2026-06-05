@@ -1,12 +1,11 @@
 from fastapi import APIRouter, File, UploadFile
 
+from app.core.config import settings
 from app.core.exceptions import DocumentEmptyError, DocumentTooLargeError, UnsupportedFileTypeError
 from app.schemas.ingest import IngestResponse
 from app.services.ingest_service import ingest_document
 
 router = APIRouter()
-
-MAX_FILE_SIZE: int = 1 * 1024 * 1024  # 1 MB
 
 
 @router.post("/ingest", response_model=IngestResponse, status_code=201)
@@ -16,7 +15,7 @@ async def ingest(file: UploadFile = File(...)) -> IngestResponse:
 
     contents = await file.read()
 
-    if len(contents) > MAX_FILE_SIZE:
+    if len(contents) > settings.MAX_FILE_SIZE_BYTES:
         raise DocumentTooLargeError()
     if len(contents) == 0:
         raise DocumentEmptyError()
