@@ -6,5 +6,6 @@ python-dotenv
 sentence-transformers
 chromadb
 httpx
+python-multipart
 pytest
 pytest-asyncio
