@@ -1,7 +1,7 @@
 import json
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     CHUNK_SIZE: int = 500
     CHUNK_OVERLAP: int = 50
     LLM_TIMEOUT_SECONDS: float = 30.0
+    # Retries are attempts *after* the first call. Backoff is exponential:
+    # delay = LLM_BACKOFF_BASE_SECONDS * 2 ** attempt (see pipeline/llm.py).
+    LLM_MAX_RETRIES: int = 3
+    LLM_BACKOFF_BASE_SECONDS: float = 0.5
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
 
     @field_validator("CORS_ORIGINS", mode="before")
@@ -33,9 +37,7 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in v.split(",")]
         return v
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 
 settings = Settings()
