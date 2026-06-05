@@ -240,3 +240,26 @@ the pytest exit code already gates.
 Roast-first paid off again — the unused import and flaky float both pass locally but bite in CI.
 
 ---
+
+### LLM retry/backoff
+
+**Tool used:** Claude Code (VS Code extension)
+
+**Prompt:**
+the ollama call has no retry, one network blip or a 429 and the whole query dies. add retry
+with exponential backoff. only retry the transient stuff (connect errors, timeouts, 429, 5xx),
+fail fast on 4xx and bad response bodies, and raise a typed error once retries run out. put the
+retry count and backoff base in config, not hardcoded, and write tests for it.
+
+**Outcome:**
+Added the retry loop in pipeline/llm.py with exponential backoff, honouring a Retry-After header
+on 429s. Retry count + backoff base went into config. 6 tests using httpx.MockTransport cover
+success, retry-then-succeed, exhaustion, and fail-fast on 4xx — 35 tests total, all green. Also
+did a one-line swap of the deprecated class-based Config to SettingsConfigDict to clear a Pydantic
+v2 warning.
+
+**Reflection:**
+For an AI app the LLM call is the least reliable hop, so retry/backoff isn't optional. The key
+detail was *not* retrying 4xx — blindly retrying everything just slows down real caller errors.
+
+---

@@ -168,6 +168,14 @@ All variables are read in one place (`app/core/config.py`) and have safe default
 - **Ollama instead of a hosted LLM API.** Same rationale: local, free, and private. No
   secrets to manage and no per-token cost, which suits an internal operations tool.
 
+- **Retry with exponential backoff on LLM calls.** LLM calls are unreliable, so transient
+  failures — connection errors, timeouts, rate limits (429) and 5xx (e.g. Ollama still
+  loading the model) — are retried up to `LLM_MAX_RETRIES` times with exponential backoff
+  (`LLM_BACKOFF_BASE_SECONDS * 2 ** attempt`), honouring a `Retry-After` header when present.
+  Caller errors (other 4xx) and malformed response bodies are *not* retried — they fail fast.
+  After exhausting retries a typed `LLMTimeoutError`/`LLMConnectionError` is raised, never a
+  silent empty answer.
+
 - **Similarity threshold (`0.3`).** After retrieval, chunks scoring below the cosine
   threshold are discarded. If nothing clears the threshold the pipeline **short-circuits**
   and returns `context_found=false` with a fixed "not enough information" answer instead of
@@ -184,7 +192,6 @@ All variables are read in one place (`app/core/config.py`) and have safe default
   - The vector store resets on restart (no persistence).
   - File validation is extension-based (`.txt`) plus a UTF-8 decode check; MIME is not
     deep-inspected.
-  - LLM calls have a timeout but no retry/backoff on transient failures.
 
 ---
 
