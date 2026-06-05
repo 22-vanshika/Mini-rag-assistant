@@ -37,6 +37,88 @@ jobs:
           python -c "from app.core.exceptions import AppException"
           python -c "from app.main import app"
 
+  backend-tests:
+    name: Backend — Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      # No `|| true` here: pytest's own exit code is the 100% gate — any failing
+      # test fails this step, fails the job, and blocks the merge.
+      - name: Run pytest
+        run: |
+          cd backend
+          python -m pytest tests/ -v --junitxml=pytest-report.xml
+
+      - name: Comment results on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- backend-tests-report -->';
+            let body;
+            try {
+              const xml = fs.readFileSync('backend/pytest-report.xml', 'utf8');
+              const tag = (xml.match(/<testsuite\b[^>]*>/) || [''])[0];
+              const attr = (name) => {
+                const m = tag.match(new RegExp(name + '="(\\d+)"'));
+                return m ? parseInt(m[1], 10) : 0;
+              };
+              const tests = attr('tests');
+              const failures = attr('failures');
+              const errors = attr('errors');
+              const skipped = attr('skipped');
+              const evaluated = tests - skipped;
+              const passed = evaluated - failures - errors;
+              const rate = evaluated ? (passed / evaluated * 100).toFixed(1) : '0.0';
+              const ok = failures === 0 && errors === 0;
+              body = `${marker}\n## 🧪 Backend Test Results\n\n`
+                + `| Metric | Value |\n| --- | --- |\n`
+                + `| ✅ Passed | ${passed} |\n| ❌ Failed | ${failures} |\n`
+                + `| 💥 Errors | ${errors} |\n| ⏭️ Skipped | ${skipped} |\n`
+                + `| **Pass rate** | **${rate}%** |\n| Threshold | 100% |\n`
+                + `| Result | ${ok ? '✅ PASS' : '❌ FAIL'} |\n`;
+            } catch (e) {
+              body = `${marker}\n## 🧪 Backend Test Results\n\n`
+                + `💥 No report produced — pytest failed to collect (import or syntax error). Check the job logs.\n`;
+            }
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
   frontend:
     name: Frontend — Type Check & Build
     runs-on: ubuntu-latest
