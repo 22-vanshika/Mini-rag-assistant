@@ -15,13 +15,18 @@ async def generate(prompt: PromptDict) -> str:
         "stream": False,
     }
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=settings.LLM_TIMEOUT_SECONDS) as client:
             response = await client.post(
                 f"{settings.OLLAMA_BASE_URL}/api/chat",
                 json=payload,
             )
             response.raise_for_status()
-            return response.json()["message"]["content"]
+            try:
+                return response.json()["message"]["content"]
+            except (KeyError, ValueError) as exc:
+                raise LLMConnectionError(
+                    f"Unexpected response shape from Ollama: {response.text[:200]}"
+                ) from exc
     except httpx.ConnectError as exc:
         raise LLMConnectionError() from exc
     except httpx.TimeoutException as exc:

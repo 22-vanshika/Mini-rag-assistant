@@ -1,13 +1,12 @@
 import asyncio
 
+from app.core.config import settings
 from app.core.exceptions import QueryEmptyError
 from app.pipeline.embedder import embedder
 from app.pipeline.llm import generate
 from app.pipeline.prompt_builder import build_prompt
 from app.pipeline.vector_store import vector_store
 from app.schemas.query import Citation, QueryResponse
-
-SIMILARITY_THRESHOLD: float = 0.3
 
 _NO_CONTEXT_ANSWER = (
     "I don't have enough information in the provided context to answer this question."
@@ -19,12 +18,14 @@ async def query_document(query: str) -> QueryResponse:
         raise QueryEmptyError()
 
     query_embedding = await asyncio.to_thread(embedder.embed_one, query)
-    results = await asyncio.to_thread(vector_store.search, query_embedding, 5)
+    results = await asyncio.to_thread(
+        vector_store.search, query_embedding, settings.TOP_K_RESULTS
+    )
 
     if not results:
         return QueryResponse(answer=_NO_CONTEXT_ANSWER, citations=[], context_found=False)
 
-    filtered = [r for r in results if r["score"] >= SIMILARITY_THRESHOLD]
+    filtered = [r for r in results if r["score"] >= settings.SIMILARITY_THRESHOLD]
 
     if not filtered:
         return QueryResponse(answer=_NO_CONTEXT_ANSWER, citations=[], context_found=False)

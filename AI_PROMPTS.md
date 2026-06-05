@@ -166,3 +166,50 @@ TimeoutException cover network-layer failures but not server-side HTTP errors �
 different branches in httpx's exception hierarchy, easy to miss one when listing them out.
 
 ---
+
+### Audit the backend and fix everything against the standards
+
+**Tool used:** Claude Code (VS Code extension)
+
+**Prompt:**
+ok the backend is pretty much written now but before I move on I want to make sure it
+actually holds up. go through every backend file and check it against the project standards
+file and the assignment, and tell me everything that's wrong or not following the rules —
+don't touch any code yet, just give me a report. I want to know about layer violations,
+stuff that should be a typed error, magic numbers that should be in config, missing docker
+stuff, the readme, all of it.
+
+then after that go ahead and fix everything you found. the main things I already know about:
+there's a bunch of hardcoded numbers like chunk size, the similarity threshold, top k and
+the file size limit that should all live in config in one place like the standards say. the
+search function returns a plain dict instead of a typed one. the readme is basically empty
+and there's no dockerfile for the backend so docker compose can't even build. also the cors
+origins value crashes the app on startup when it gets read from env, and one of the error
+classes returns a 200 which makes no sense. fix those plus anything else from your report.
+for anything I didn't spell out — where config goes, naming, how errors are shaped — just
+follow the project standards file. don't refactor anything that isn't actually broken.
+
+**Outcome:**
+Claude produced an audit report first, then applied the fixes. It moved all seven tunables
+(file size, similarity threshold, top k, chunk size, overlap, llm timeout, embedding model)
+into config.py and added a validator so CORS_ORIGINS accepts both a JSON list and a plain
+comma string — that was the startup crash. Changed NoContextFoundError from 200 to 404,
+added a SearchResult TypedDict for the vector store search return, added query validation so
+empty/whitespace questions get rejected at the schema, and wrapped the Ollama JSON access so
+a bad response shape returns a typed error instead of a 500. Cleaned requirements.txt (dropped
+chromadb and python-dotenv which weren't used, added numpy which was), wrote the backend
+Dockerfile, rewrote docker-compose to add an ollama service with a named volume and point the
+backend at it, fixed .env.example, and wrote the full README. It verified by importing the app
+and running a small check script — all passed.
+
+One thing I caught and fixed after: the CORS_ORIGINS line in docker-compose wasn't quoted, so
+the bare square brackets parse weird in some compose versions. Asked Claude to quote it and
+re-checked the yaml.
+
+**Reflection:**
+Having it do a read-only audit first and report before changing anything was the right call —
+it meant I could sanity check the list of problems before any code moved. The docker-compose
+quoting was a small thing the AI missed because the unquoted version still loads in newer
+compose, so it didn't flag it until I pointed it out.
+
+---

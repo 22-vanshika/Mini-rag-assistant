@@ -1,10 +1,11 @@
 from sentence_transformers import SentenceTransformer
 
+from app.core.config import settings
 from app.core.exceptions import EmbeddingError
 
 
 class Embedder:
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2") -> None:
+    def __init__(self, model_name: str = settings.EMBEDDING_MODEL) -> None:
         try:
             self._model = SentenceTransformer(model_name)
         except Exception as exc:
@@ -28,4 +29,4 @@ class Embedder:
         return self.embed([text])[0]
 
 
-embedder = Embedder()
+embedder = Embedder(model_name=settings.EMBEDDING_MODEL)
