@@ -213,3 +213,30 @@ quoting was a small thing the AI missed because the unquoted version still loads
 compose, so it didn't flag it until I pointed it out.
 
 ---
+
+### Backend test suite + CI gate
+
+**Tool used:** Claude Code (VS Code extension)
+
+**Prompt:**
+write the backend test suite with pytest for the parts with real logic — the chunker, the
+in-memory vector store, and the pydantic schemas. cover the edge cases: empty/whitespace input,
+overlap, no infinite loop on weird text, top k limits, the zero vector guard, store replacing
+old data, thread safety. roast the cases first and fix anything dumb, then write them under
+backend/tests following the project standards. then wire up CI so they run on every push, show
+the results as a PR comment, and block merge when a test fails.
+
+**Outcome:**
+Claude roasted the cases first and caught real issues: a test importing VectorStore but never
+using it (would've failed ruff lint), a flaky float comparison on the cosine score, the
+infinite-loop test that needed a timeout to fail fast instead of hanging, and a concurrency
+test that wasn't collecting exceptions from inside the threads. 29 tests, all green, plus a new
+"Backend — Tests" CI job that posts a pass/fail comment on the PR.
+
+Stripped the extra files it generated (evaluate script, pytest.ini, empty **init** files) since
+the pytest exit code already gates.
+
+**Reflection:**
+Roast-first paid off again — the unused import and flaky float both pass locally but bite in CI.
+
+---
