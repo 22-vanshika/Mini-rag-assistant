@@ -95,3 +95,74 @@ on short test strings you'd write quickly. The silent failure in vector store wa
 a big deal because quiet wrong answers are way harder to debug than clear errors.
 
 ---
+
+### API routes, services, and schema layer
+
+**Tool used:** Claude Code (VS Code extension)
+
+**Prompt:**
+ok I need you to implement the API layer and service layer now. I have the specs written out
+for the schemas, services, route handlers and the router. before you just go ahead and write
+everything, look at it first and tell me if anything looks wrong with the design — check it
+against the project standards too not just the spec.
+
+the schemas are IngestResponse, QueryRequest, QueryResponse and Citation.
+ingest service takes the text, chunks it, embeds the chunks, stores them, returns how many
+chunks got stored. query service takes the query, embeds it, searches, filters by threshold,
+builds a prompt and calls ollama, returns the answer with citations.
+ingest route handles .txt file uploads max 1mb. query route just takes a json body with
+the query string.
+
+spec says to call ollama directly from the query service using httpx, and to raise
+NoContextFoundError with status_code 200 when nothing is found. something feels off
+about both of those but I'm not 100% sure, just flag whatever you think is wrong
+and then implement with fixes.
+
+check project standards for anything I didn't mention — layer rules, where external calls
+should live, how to handle async vs sync pipeline code, constants placement, all of that.
+
+**Outcome:**
+Claude reviewed first and caught a few real issues before writing anything. The ollama httpx
+call got moved out of the service into a new pipeline/llm.py to follow the layer rules.
+NoContextFoundError had status_code=200 which would return HTTP 200 with an error body —
+changed to return a proper QueryResponse with context_found=False instead. The sync pipeline
+calls in ingest_service got wrapped in asyncio.to_thread since sentence-transformers is
+CPU-heavy and would've blocked the event loop. Also fixed build_prompt getting a list[dict]
+instead of list[str], added UnicodeDecodeError handling for non-UTF-8 files, and moved
+MAX_FILE_SIZE to module level. Had to add python-multipart to requirements.txt separately —
+FastAPI needs it for UploadFile but it wasn't there.
+
+**Reflection:**
+Getting Claude to review the spec against the project standards before coding caught most of
+the real bugs. The architecture violation was the most important fix — putting the httpx call
+in the service would've broken the layering rule and made it hard to swap providers later.
+The status_code=200 on an exception was a subtle one I wouldn't have caught just reading
+quickly. The asyncio.to_thread fix was something I would've noticed only once the server
+started dropping requests under any load.
+
+---
+
+### LLM error handling — HTTPStatusError not caught
+
+**Tool used:** Claude Code (VS Code extension)
+
+**Prompt:**
+getting a 500 from the query endpoint when ollama errors. server logs show httpx.HTTPStatusError
+from response.raise_for_status() — ollama is responding but returning a non-200. we're catching
+ConnectError and TimeoutException in pipeline/llm.py but not HTTPStatusError so it bubbles up
+as unhandled and hits the generic 500 handler. fix it so that case also maps to LLMConnectionError
+with the actual status code in the message.
+
+**Outcome:**
+Added `except httpx.HTTPStatusError` block in pipeline/llm.py that raises LLMConnectionError
+with the Ollama response status code in the message. Any bad HTTP response from Ollama now
+returns a typed 502 instead of a generic 500. Root cause of the original error was a broken
+Homebrew Ollama install where the llama-server binary wasn't bundled — fix is to use the
+official Ollama installer.
+
+**Reflection:**
+Should have caught the missing HTTPStatusError case during implementation. ConnectError and
+TimeoutException cover network-layer failures but not server-side HTTP errors — they're
+different branches in httpx's exception hierarchy, easy to miss one when listing them out.
+
+---
