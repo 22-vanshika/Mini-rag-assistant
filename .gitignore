@@ -7,5 +7,8 @@ dist/
 *.egg-info/
 .venv/
 chroma_db/
+.pytest_cache/
+backend/pytest-report.xml
 .agents/
 CLAUDE.md
+Assignment.md

@@ -61,7 +61,7 @@ async def unhandled_exception_handler(request, exc: Exception) -> JSONResponse:
 
 
 @app.get("/health")
-async def health_check() -> dict:
+async def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
