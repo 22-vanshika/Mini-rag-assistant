@@ -371,7 +371,21 @@ Overwrote `README.md` with a clean, visual markdown document. Used Mermaid chart
 **Reflection:**
 A visual, table-driven README is much easier to read and understand than block paragraphs. Explaining setup in basic terms ensures it is fully reproducible by any evaluator.
 
+### Configure comprehensive gitignore and dockerignore rules
+
+**Tool used:** Antigravity
+
+**Prompt:**
+add all non-required file in git ignore and dockerignore, there aree too many unnecesaary files
+
+**Outcome:**
+Rewrote the root `.gitignore` file with comprehensive exclusions for dependency folders (`node_modules`), environments (`.venv`), compiler caches (`__pycache__`), IDE configurations (`.vscode`, `.idea`), OS files, test logs, and database files. Overwrote both `backend/.dockerignore` and `frontend/.dockerignore` to cleanly exclude unnecessary assets from Docker build contexts. Additionally untracked `.vscode/settings.json` from the Git index so it is now successfully ignored.
+
+**Reflection:**
+Keeping ignore configuration files detailed and up-to-date prevents developers from accidentally committing credentials, logs, caches, or large build files. It also keeps Docker builds clean, lightweight, and fast.
+
 ---
+
 
 
 
