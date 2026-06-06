@@ -147,3 +147,85 @@ jobs:
         run: |
           cd frontend
           npm run build
+
+  frontend-tests:
+    name: Frontend — Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run vitest
+        run: |
+          cd frontend
+          npx vitest run --reporter=junit --outputFile=vitest-report.xml
+
+      - name: Comment results on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- frontend-tests-report -->';
+            let body;
+            try {
+              const xml = fs.readFileSync('frontend/vitest-report.xml', 'utf8');
+              const tag = (xml.match(/<testsuite\b[^>]*>/) || [''])[0];
+              const attr = (name) => {
+                const m = tag.match(new RegExp(name + '="(\\d+)"'));
+                return m ? parseInt(m[1], 10) : 0;
+              };
+              const tests = attr('tests');
+              const failures = attr('failures');
+              const errors = attr('errors');
+              const skipped = attr('skipped');
+              const evaluated = tests - skipped;
+              const passed = evaluated - failures - errors;
+              const rate = evaluated ? (passed / evaluated * 100).toFixed(1) : '0.0';
+              const ok = failures === 0 && errors === 0;
+              body = `${marker}\n## 🧪 Frontend Test Results\n\n`
+                + `| Metric | Value |\n| --- | --- |\n`
+                + `| ✅ Passed | ${passed} |\n| ❌ Failed | ${failures} |\n`
+                + `| 💥 Errors | ${errors} |\n| ⏭️ Skipped | ${skipped} |\n`
+                + `| **Pass rate** | **${rate}%** |\n| Threshold | 100% |\n`
+                + `| Result | ${ok ? '✅ PASS' : '❌ FAIL'} |\n`;
+            } catch (e) {
+              body = `${marker}\n## 🧪 Frontend Test Results\n\n`
+                + `💥 No report produced — vitest failed to run or syntax error occurred. Check the job logs.\n`;
+            }
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
