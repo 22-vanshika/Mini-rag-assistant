@@ -6,10 +6,16 @@ from app.core.exceptions import EmbeddingError
 
 class Embedder:
     def __init__(self, model_name: str = settings.EMBEDDING_MODEL) -> None:
-        try:
-            self._model = SentenceTransformer(model_name)
-        except Exception as exc:
-            raise EmbeddingError(f"Failed to load embedding model '{model_name}'") from exc
+        self.model_name = model_name
+        self._model = None
+
+    def _get_model(self) -> SentenceTransformer:
+        if self._model is None:
+            try:
+                self._model = SentenceTransformer(self.model_name)
+            except Exception as exc:
+                raise EmbeddingError(f"Failed to load embedding model '{self.model_name}'") from exc
+        return self._model
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         if not texts:
@@ -18,8 +24,11 @@ class Embedder:
         if any(not t or not t.strip() for t in texts):
             raise EmbeddingError("Cannot embed empty or whitespace-only text")
         try:
-            vectors = self._model.encode(texts)
+            model = self._get_model()
+            vectors = model.encode(texts)
             return [v.tolist() for v in vectors]
+        except EmbeddingError:
+            raise
         except Exception as exc:
             raise EmbeddingError("Failed to generate embeddings") from exc
 
