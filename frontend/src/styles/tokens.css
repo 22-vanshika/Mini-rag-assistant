@@ -1,13 +1,63 @@
 :root {
-  /* Colors */
+  /* Pastel Light Theme (HSL values without degree/percent signs for Tailwind opacity support) */
+  --background: 240 30% 98%;      /* Soft lavender-tinted background */
+  --foreground: 240 15% 15%;      /* Dark grayish slate */
+  
+  --card: 0 0% 100%;              /* Clean white cards */
+  --card-foreground: 240 15% 15%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 15% 15%;
+  
+  --primary: 262 70% 88%;         /* Beautiful pastel purple */
+  --primary-foreground: 262 45% 25%; /* Readable contrast color */
+  
+  --secondary: 152 50% 88%;       /* Beautiful pastel mint green */
+  --secondary-foreground: 152 45% 25%;
+  
+  --muted: 240 15% 95%;           /* Very light gray-blue */
+  --muted-foreground: 240 8% 45%;
+  
+  --accent: 335 65% 90%;          /* Soft pastel blush pink */
+  --accent-foreground: 335 45% 25%;
+  
+  --destructive: 0 75% 90%;       /* Soft pastel coral/red */
+  --destructive-foreground: 0 50% 30%;
+  
+  --border: 240 12% 92%;          /* Light border */
+  --input: 240 12% 92%;
+  --ring: 262 70% 88%;
+  
+  --radius: 0.75rem;
+}
 
-  /* Spacing */
-
-  /* Typography */
-
-  /* Border radius */
-
-  /* Shadows */
-
-  /* Transitions */
+.dark {
+  /* Sleek Pastel Dark Theme */
+  --background: 240 16% 12%;      /* Cozy dark navy-gray */
+  --foreground: 240 10% 95%;
+  
+  --card: 240 16% 16%;            /* Slightly lighter card background */
+  --card-foreground: 240 10% 95%;
+  
+  --popover: 240 16% 16%;
+  --popover-foreground: 240 10% 95%;
+  
+  --primary: 262 40% 35%;         /* Rich deep pastel purple */
+  --primary-foreground: 262 80% 95%;
+  
+  --secondary: 152 30% 32%;       /* Rich deep pastel mint green */
+  --secondary-foreground: 152 80% 95%;
+  
+  --muted: 240 12% 18%;
+  --muted-foreground: 240 8% 70%;
+  
+  --accent: 335 35% 32%;          /* Rich deep pastel pink */
+  --accent-foreground: 335 80% 95%;
+  
+  --destructive: 0 45% 30%;       /* Rich deep pastel red */
+  --destructive-foreground: 0 80% 95%;
+  
+  --border: 240 12% 22%;
+  --input: 240 12% 22%;
+  --ring: 262 40% 35%;
 }
