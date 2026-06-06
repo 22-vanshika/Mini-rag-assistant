@@ -1,4 +1,28 @@
+# Virtual environments & python caches
 .venv
 __pycache__
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.ruff_cache
+
+# Testing assets
 tests
+pytest-report.xml
+
+# Local settings and databases
+.env
+*.db
+*.sqlite
+*.log
+
+# VCS & IDE directories
+.git
+.github
+.vscode
+.idea
+.agents
+.claude
+Dockerfile
+README.md

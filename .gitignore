@@ -1,14 +1,71 @@
-.env
-__pycache__/
-*.pyc
+# Dependency directories
 node_modules/
+**/node_modules/
 dist/
-.DS_Store
-*.egg-info/
+**/dist/
+
+# Environments
+.env
+.env.local
+.env.*.local
 .venv/
-chroma_db/
+**/.venv/
+env/
+venv/
+ENV/
+
+# Python cache & compiler files
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+build/
+develop-eggs/
+downloads/
+eggs/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+
+# IDE / Editors
+.vscode/
+.idea/
+*.suo
+*.ntvsca*
+*.njsproj
+*.sln
+*.swp
+*~
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Cache and Testing
 .pytest_cache/
+**/.pytest_cache/
+.ruff_cache/
+**/.ruff_cache/
+.npm/
+.eslintcache
+.parcel-cache
+.cache
 backend/pytest-report.xml
+frontend/vitest-report.xml
+
+# Project-specific local files / databases
+chroma_db/
+local_store/
+*.db
+*.sqlite
+*.log
 .agents/
+.claude/
 CLAUDE.md
 Assignment.md
