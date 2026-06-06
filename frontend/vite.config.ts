@@ -24,4 +24,20 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Exclude jspdf and html2canvas from the main vendor chunk so they load on-demand
+            if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('fflate') || id.includes('canvg')) {
+              return 'jspdf';
+            }
+            return 'vendor';
+          }
+        },
+      },
+    },
+  },
 })

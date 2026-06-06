@@ -2,7 +2,6 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { Download, Menu, FileText } from "lucide-react"
 import { useAppStore } from "@/store"
 import { Button } from "@/components/ui/Button"
-import { exportChatToPDF } from "@/lib/pdfExport"
 import { Logo } from "@/components/ui/Logo"
 
 interface TopBarProps {
@@ -17,8 +16,9 @@ export function TopBar({ showMenuButton, onToggleSidebar, showDocButton, onToggl
   const activeSession = sessions.find(s => s.id === activeSessionId)
   const hasMessages = activeSession && activeSession.messages && activeSession.messages.length > 0
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (activeSession) {
+      const { exportChatToPDF } = await import("@/lib/pdfExport")
       exportChatToPDF(activeSession.name, activeSession.messages)
     }
   }
