@@ -19,6 +19,8 @@ services:
       - BACKEND_PORT=8000
       - 'CORS_ORIGINS=["http://localhost:5173"]'
       - APP_ENV=development
+    volumes:
+      - hf_cache:/root/.cache/huggingface
     depends_on:
       - ollama
 
@@ -31,3 +33,4 @@ services:
 
 volumes:
   ollama_data:
+  hf_cache:
