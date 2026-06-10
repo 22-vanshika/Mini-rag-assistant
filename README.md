@@ -22,31 +22,82 @@ DocuQuery is a smart AI assistant for text files.
 
 ### How to Run
 
-Here is how to run this app on your laptop for the first time:
+Here is how to run this app on your laptop. You can choose either the **Local Setup (Recommended)** or the **Docker Setup**.
 
-#### 1. Install Ollama (The AI brain)
+---
+
+### Option A: Local Setup (Recommended - Faster & Lighter)
+
+This option runs the application directly on your host operating system. It is faster to set up and uses less memory.
+
+#### 1. Install and Start Ollama (The AI brain)
 - Go to [ollama.com](https://ollama.com) on your web browser and click **Download**.
 - Open the file you downloaded and follow the screen instructions to install it.
-- Open your laptop's **Terminal** app (search "Terminal" on Mac, or "Command Prompt" on Windows).
-- Copy this text, paste it into the terminal, and press **Enter**:
+- Start the Ollama app on your computer.
+- Open your laptop's **Terminal** app (search "Terminal" on Mac, or "Command Prompt" on Windows), paste this command, and press **Enter**:
   ```bash
   ollama pull llama3.2:3b
   ```
 
-#### 2. Get Docker Desktop (The container builder)
-- Go to [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) and download it.
-- Install it and open it. Keep the Docker app running in the background.
+#### 2. Run the Backend Server
+- Open a new terminal window/tab and navigate to the `backend` directory:
+  ```bash
+  cd backend
+  ```
+- Create and activate a Python virtual environment:
+  - **macOS/Linux**:
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate
+    ```
+  - **Windows**:
+    ```cmd
+    python -m venv .venv
+    .venv\Scripts\activate
+    ```
+- Install the python dependencies:
+  ```bash
+  pip install -r requirements.txt
+  ```
+- Start the FastAPI backend server:
+  ```bash
+  uvicorn app.main:app --reload
+  ```
+- Keep this terminal window open. The backend runs at `http://localhost:8000`.
 
-#### 3. Run the App
-- In your Terminal app, go to this project's folder.
-- Type this command and press **Enter**:
+#### 3. Run the Frontend App
+- Open a second terminal window/tab and navigate to the `frontend` directory:
+  ```bash
+  cd frontend
+  ```
+- Install the node packages:
+  ```bash
+  npm install
+  ```
+- Start the Vite development server:
+  ```bash
+  npm run dev
+  ```
+- Keep this terminal open. Open your web browser and go to `http://localhost:5173` to start chatting!
+
+---
+
+### Option B: Docker Setup (Runs everything in containers)
+
+This option runs the frontend, backend, and Ollama inside isolated Docker containers. We have optimized this setup to use **BuildKit layer cache mounts** and **named volumes** so that dependencies and AI model weights are cached, making subsequent runs extremely fast.
+
+#### 1. Download and Open Docker Desktop
+- Go to [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) and download Docker Desktop for your system.
+- Install it, open it, and keep it running in the background.
+
+#### 2. Build and Launch the Containers
+- Open your terminal and navigate to the root directory of this project.
+- Build and run the entire stack:
   ```bash
   docker compose up --build
   ```
-- Wait a minute until it finishes downloading and setting up.
-- Open your internet browser (like Chrome or Safari) and go to:
-  `http://localhost:5173`
-- You are ready! Upload a `.txt` file or paste text, and start chatting.
+- **Note**: The very first build downloads pip/npm packages and model weights, which takes a few minutes. Subsequent builds will start instantly (under 10 seconds) due to layer/volume caching.
+- Once launched, open your web browser and go to `http://localhost:5173` to use the application.
 
 ---
 
